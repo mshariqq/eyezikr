@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Allah — Meditation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Georgia', serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: none;
+  }
+
+  #stars-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #stage {
+    position: relative;
+    z-index: 10;
+    width: 530px;
+    height: 530px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(10,6,0,0.60) 0%, transparent 72%);
+    pointer-events: none;
+  }
+
+  #allah {
+    font-family: 'Times New Roman', 'Scheherazade New', serif;
+    font-size: 148px;
+    font-weight: 700;
+    color: #c9922a;
+    line-height: 1;
+    letter-spacing: 2px;
+    user-select: none;
+    text-shadow:
+      0 0 12px  rgba(255,200,80,0.25),
+      0 0 30px  rgba(201,146,42,0.20);
+    animation: breathe 4s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%,100% { opacity: 0.85; }
+    50%      { opacity: 1; }
+  }
+
+  @keyframes shine {
+    0% {
+      color: #c9922a;
+      text-shadow: 0 0 12px rgba(255,200,80,0.30), 0 0 30px rgba(201,146,42,0.25);
+      filter: brightness(1) blur(0px);
+    }
+    12% {
+      color: #ffe080;
+      text-shadow:
+        0 0 10px  rgba(255,230,100,0.95),
+        0 0 40px  rgba(255,200,60,0.85),
+        0 0 90px  rgba(255,180,20,0.70),
+        0 0 160px rgba(255,160,10,0.45);
+      filter: brightness(1.4) saturate(1.4) blur(0px);
+    }
+    22% {
+      color: #ffffff;
+      text-shadow:
+        0 0 8px   rgba(255,255,255,1.00),
+        0 0 25px  rgba(255,255,255,0.95),
+        0 0 60px  rgba(255,255,255,0.85),
+        0 0 120px rgba(255,240,200,0.70),
+        0 0 220px rgba(255,220,150,0.50),
+        0 0 400px rgba(255,200,100,0.25);
+      filter: brightness(2.2) saturate(0.4) blur(0.6px);
+    }
+    32% {
+      color: #fff8ee;
+      text-shadow:
+        0 0 10px  rgba(255,255,255,0.90),
+        0 0 35px  rgba(255,255,255,0.75),
+        0 0 80px  rgba(255,240,180,0.55),
+        0 0 180px rgba(255,220,120,0.30);
+      filter: brightness(1.8) saturate(0.6) blur(0.3px);
+    }
+    70% {
+      color: #e8b050;
+      text-shadow:
+        0 0 14px rgba(255,210,90,0.65),
+        0 0 40px rgba(201,146,42,0.50),
+        0 0 80px rgba(201,146,42,0.30);
+      filter: brightness(1.15) saturate(1.1) blur(0px);
+    }
+    100% {
+      color: #c9922a;
+      text-shadow: 0 0 12px rgba(255,200,80,0.25), 0 0 30px rgba(201,146,42,0.20);
+      filter: brightness(1) blur(0px);
+    }
+  }
+
+  #allah.shining {
+    animation: shine 2.4s ease-out forwards, breathe 4s ease-in-out infinite 2.4s;
+  }
+
+  #ring { display: none; }
+
+  #flash { display: none; }
+
+  /* ── Counter ── */
+  #counter {
+    position: fixed;
+    bottom: 72px;
+    right: 28px;
+    z-index: 20;
+    text-align: right;
+    line-height: 1.55;
+    pointer-events: none;
+  }
+  #counter .label {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: rgba(201,146,42,0.40);
+    display: block;
+  }
+  #counter .number {
+    font-size: 26px;
+    font-weight: 700;
+    color: rgba(201,146,42,0.75);
+    display: block;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 14px rgba(201,146,42,0.35);
+    transition: transform .12s ease, color .12s ease;
+  }
+  #counter .number.bump {
+    transform: scale(1.25);
+    color: rgba(255,255,255,1);
+    text-shadow: 0 0 18px rgba(255,255,255,0.8);
+  }
+  #counter .sep {
+    width: 100%;
+    height: 1px;
+    background: rgba(201,146,42,0.18);
+    margin: 5px 0;
+  }
+  #counter .total-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(201,146,42,0.28);
+    text-transform: uppercase;
+  }
+  #counter .total-number {
+    font-size: 14px;
+    color: rgba(201,146,42,0.45);
+    font-variant-numeric: tabular-nums;
+  }
+
+  #session-label {
+    position: fixed;
+    top: 22px;
+    left: 26px;
+    z-index: 20;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: rgba(201,146,42,0.28);
+    pointer-events: none;
+  }
+
+  /* ── Creator credit ── */
+  #credit {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 20;
+    font-size: 10px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: rgba(201,146,42,0.28);
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+  }
+  #credit:hover {
+    color: rgba(255,220,100,0.70);
+    text-shadow: 0 0 12px rgba(201,146,42,0.40);
+  }
+
+  /* ── Popup overlay ── */
+  #popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fade-in 0.5s ease forwards;
+  }
+  #popup-overlay.hiding {
+    animation: fade-out 0.5s ease forwards;
+  }
+  @keyframes fade-in {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; } to { opacity: 0; }
+  }
+
+  #popup {
+    text-align: center;
+    padding: 44px 48px 36px;
+    border: 1px solid rgba(201,146,42,0.30);
+    border-radius: 18px;
+    background: rgba(8,4,0,0.92);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 60px rgba(201,146,42,0.10), 0 0 120px rgba(201,146,42,0.05);
+    max-width: 340px;
+    animation: popup-in 0.6s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  @keyframes popup-in {
+    0%   { opacity: 0; transform: scale(0.92) translateY(16px); }
+    100% { opacity: 1; transform: scale(1)    translateY(0); }
+  }
+
+  #popup .p-icon {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 18px;
+    filter: drop-shadow(0 0 10px rgba(255,200,80,0.40));
+  }
+
+  #popup .p-title {
+    font-size: 11px;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: rgba(201,146,42,0.50);
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  #popup .p-message {
+    font-size: 15px;
+    line-height: 1.75;
+    color: rgba(255,220,100,0.82);
+    text-shadow: 0 0 14px rgba(201,146,42,0.35);
+    margin-bottom: 32px;
+  }
+  #popup .p-message em {
+    font-style: normal;
+    color: #ffffff;
+    text-shadow: 0 0 16px rgba(255,255,255,0.65);
+    font-weight: 700;
+  }
+
+  #popup-ok {
+    background: none;
+    border: 1px solid rgba(201,146,42,0.45);
+    color: rgba(255,210,80,0.80);
+    font-family: 'Georgia', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 11px 36px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    outline: none;
+    text-shadow: 0 0 10px rgba(201,146,42,0.30);
+  }
+  #popup-ok:hover {
+    border-color: rgba(255,220,100,0.80);
+    color: #fff;
+    text-shadow: 0 0 16px rgba(255,255,255,0.60);
+    box-shadow: 0 0 24px rgba(201,146,42,0.22);
+    background: rgba(201,146,42,0.07);
+  }
+
+  /* ── Speed controls ── */
+  #speed-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .spd-btn {
+    background: none;
+    border: 1px solid rgba(201,146,42,0.25);
+    color: rgba(201,146,42,0.50);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Georgia', serif;
+    outline: none;
+    white-space: nowrap;
+  }
+  .spd-btn:hover {
+    border-color: rgba(201,146,42,0.60);
+    color: rgba(201,146,42,0.90);
+    text-shadow: 0 0 10px rgba(201,146,42,0.45);
+    background: rgba(201,146,42,0.05);
+  }
+  .spd-btn.active {
+    border-color: rgba(255,220,100,0.80);
+    color: #ffe080;
+    text-shadow: 0 0 12px rgba(255,200,60,0.70);
+    background: rgba(201,146,42,0.10);
+    box-shadow: 0 0 16px rgba(201,146,42,0.18);
+  }
+
+  /* pace label between buttons */
+  #pace-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(201,146,42,0.22);
+    pointer-events: none;
+    min-width: 52px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+<div id="flash"></div>
+
+<div id="stage">
+  <div id="ring"></div>
+  <div id="allah">ٱللَّٰه</div>
+</div>
+
+<div id="session-label">Session</div>
+
+<a id="credit" href="https://mshariqq.github.io" target="_blank" rel="noopener">Created by Muhammed Shariqq</a>
+
+<div id="popup-overlay">
+  <div id="popup">
+    <span class="p-icon">🤍</span>
+    <span class="p-title">Before you begin</span>
+    <div class="p-message">
+      Read <em>YA ALLAH U</em><br>in your heart<br>on every <em>SHINE</em>
+    </div>
+    <button id="popup-ok">I am Ready</button>
+  </div>
+</div>
+
+<div id="counter">
+  <span class="label">This session</span>
+  <span class="number" id="session-count">0</span>
+  <div class="sep"></div>
+  <span class="total-label">All time</span>
+  <span class="total-number" id="total-count">0</span>
+</div>
+
+<!-- Speed control bar -->
+<div id="speed-bar">
+  <button class="spd-btn" data-interval="6000">Calm</button>
+  <button class="spd-btn active" data-interval="3400">Normal</button>
+  <button class="spd-btn" data-interval="1800">Fast</button>
+  <span id="pace-label">pace</span>
+  <button class="spd-btn" data-interval="900">Rapid</button>
+  <button class="spd-btn" data-interval="400">Storm</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   WARP STARS
+══════════════════════════════════════ */
+const canvas = document.getElementById('stars-canvas');
+const ctx    = canvas.getContext('2d');
+
+let W, H, cx, cy;
+let stars = [];
+const STAR_COUNT = 520;
+const MAX_DEPTH  = 1000;
+let starSpeed    = 3.8; // driven by shine interval
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  cx = W / 2; cy = H / 2;
+  buildStars();
+}
+
+function buildStars() {
+  stars = [];
+  for (let i = 0; i < STAR_COUNT; i++) {
+    stars.push({ x:(Math.random()-.5)*W, y:(Math.random()-.5)*H,
+                 z:Math.random()*MAX_DEPTH, pz:0 });
+    stars[stars.length-1].pz = stars[stars.length-1].z;
+  }
+}
+
+function drawStars() {
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.fillRect(0,0,W,H);
+  for (const s of stars) {
+    s.pz = s.z;
+    s.z -= starSpeed;
+    if (s.z <= 0) {
+      s.x=(Math.random()-.5)*W; s.y=(Math.random()-.5)*H;
+      s.z=MAX_DEPTH; s.pz=MAX_DEPTH;
+    }
+    const sx=(s.x/s.z)*W+cx, sy=(s.y/s.z)*H+cy;
+    const px=(s.x/s.pz)*W+cx, py=(s.y/s.pz)*H+cy;
+    const t=1-s.z/MAX_DEPTH;
+    const alpha=Math.min(1,t*1.4), radius=Math.max(0.3,t*2.2);
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(sx,sy);
+    ctx.strokeStyle=`rgba(255,245,220,${alpha.toFixed(3)})`;
+    ctx.lineWidth=radius; ctx.stroke();
+  }
+}
+
+/* ══════════════════════════════════════
+   COUNT PERSISTENCE
+══════════════════════════════════════ */
+const STORE_KEY = 'allah_count_data';
+function loadData() {
+  try { const r=localStorage.getItem(STORE_KEY); if(r) return JSON.parse(r); } catch(_){}
+  return {total:0};
+}
+function saveData(d) { try{localStorage.setItem(STORE_KEY,JSON.stringify(d));}catch(_){} }
+
+let data = loadData(), sessionCount = 0;
+const elSession = document.getElementById('session-count');
+const elTotal   = document.getElementById('total-count');
+
+function renderCounts() {
+  elSession.textContent = sessionCount;
+  elTotal.textContent   = data.total;
+}
+renderCounts();
+
+function bumpCount() {
+  sessionCount++; data.total++; saveData(data); renderCounts();
+  elSession.classList.remove('bump');
+  void elSession.offsetWidth;
+  elSession.classList.add('bump');
+  setTimeout(()=>elSession.classList.remove('bump'), 300);
+}
+
+/* ══════════════════════════════════════
+   SHINE
+══════════════════════════════════════ */
+const allah = document.getElementById('allah');
+
+function triggerShine() {
+  allah.classList.remove('shining');
+  void allah.offsetWidth;
+  allah.classList.add('shining');
+  bumpCount();
+  setTimeout(()=>{ allah.classList.remove('shining'); }, 2500);
+}
+
+/* ══════════════════════════════════════
+   SPEED CONTROL
+   interval levels → also scale star speed
+══════════════════════════════════════ */
+// interval → star warp speed mapping
+const speedMap = {
+  6000: 1.6,
+  3400: 3.8,
+  1800: 7.0,
+  900:  13.0,
+  400:  24.0,
+};
+
+let currentInterval = 3400;
+let shineTimer = null;
+
+function setSpeed(intervalMs) {
+  currentInterval = intervalMs;
+  starSpeed = speedMap[intervalMs] ?? 3.8;
+
+  // restart interval
+  clearInterval(shineTimer);
+  shineTimer = setInterval(triggerShine, currentInterval);
+
+  // update button states
+  document.querySelectorAll('.spd-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.interval) === intervalMs);
+  });
+}
+
+document.querySelectorAll('.spd-btn').forEach(btn => {
+  btn.addEventListener('click', () => setSpeed(parseInt(btn.dataset.interval)));
+});
+
+/* ══════════════════════════════════════
+   POPUP — gate shine behind OK
+══════════════════════════════════════ */
+let shineStarted = false;
+
+function startShine() {
+  if (shineStarted) return;
+  shineStarted = true;
+  setSpeed(3400);
+  setTimeout(triggerShine, 600);
+}
+
+document.getElementById('popup-ok').addEventListener('click', () => {
+  const overlay = document.getElementById('popup-overlay');
+  overlay.classList.add('hiding');
+  setTimeout(() => overlay.remove(), 500);
+  startShine();
+});
+
+/* ══════════════════════════════════════
+   LOOP
+══════════════════════════════════════ */
+function loop() { drawStars(); requestAnimationFrame(loop); }
+window.addEventListener('resize', resize);
+resize();
+ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+loop();
+</script>
+</body>
+</html>
