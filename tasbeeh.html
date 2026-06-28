@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tasbeeh — Eye Zikr</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Georgia', serif;
+  }
+
+  #stars-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  #scroll-viewport {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+  }
+
+  #scroll-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    will-change: transform;
+  }
+
+  .allah-line {
+    font-family: 'Times New Roman', 'Scheherazade New', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #c9922a;
+    letter-spacing: 3px;
+    text-shadow: 0 0 8px rgba(255,200,80,0.30), 0 0 20px rgba(201,146,42,0.20);
+    white-space: nowrap;
+    user-select: none;
+    opacity: 0.90;
+  }
+
+  .allah-line.done {
+    color: rgba(201,146,42,0.30);
+    text-shadow: none;
+    opacity: 0.5;
+  }
+
+  .allah-line.current {
+    color: #ffffff;
+    font-size: 1.6rem;
+    text-shadow:
+      0 0 8px  rgba(255,255,255,1.00),
+      0 0 25px rgba(255,230,100,0.90),
+      0 0 60px rgba(255,200,60,0.70),
+      0 0 120px rgba(201,146,42,0.50);
+    animation: current-pulse 1s ease-in-out infinite;
+    transform: scale(1.15);
+  }
+  @keyframes current-pulse {
+    0%,100% { opacity: 1; text-shadow: 0 0 8px rgba(255,255,255,1), 0 0 25px rgba(255,230,100,0.9), 0 0 60px rgba(255,200,60,0.7); }
+    50%      { opacity: 1; text-shadow: 0 0 15px rgba(255,255,255,1), 0 0 40px rgba(255,230,100,1), 0 0 80px rgba(255,200,60,0.9), 0 0 140px rgba(201,146,42,0.6); }
+  }
+
+  /* ── Header / Nav ── */
+  .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 26px;
+    background: rgba(8,4,0,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(201,146,42,0.12);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo {
+    font-family: 'Times New Roman', 'Scheherazade New', serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #c9922a;
+    text-shadow: 0 0 10px rgba(201,146,42,0.25);
+    user-select: none;
+  }
+  .breadcrumb {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: rgba(201,146,42,0.35);
+    user-select: none;
+  }
+  .breadcrumb::before {
+    content: '/';
+    margin-right: 10px;
+    color: rgba(201,146,42,0.20);
+  }
+  .nav-toggle {
+    background: none;
+    border: 1px solid rgba(201,146,42,0.30);
+    color: #c9922a;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    outline: none;
+  }
+  .nav-toggle:hover {
+    border-color: rgba(255,220,100,0.60);
+    color: #ffe080;
+  }
+  .dropdown {
+    position: fixed;
+    top: 54px;
+    right: 26px;
+    z-index: 199;
+    min-width: 170px;
+    background: rgba(8,4,0,0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(201,146,42,0.20);
+    border-radius: 10px;
+    padding: 8px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  }
+  .dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .dropdown a {
+    display: block;
+    padding: 10px 20px;
+    font-family: 'Georgia', serif;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: rgba(201,146,42,0.65);
+    transition: background 0.2s, color 0.2s;
+  }
+  .dropdown a:hover {
+    background: rgba(201,146,42,0.08);
+    color: #ffe080;
+  }
+  .dropdown a.active {
+    color: #ffe080;
+    text-shadow: 0 0 10px rgba(255,200,60,0.40);
+  }
+  .dropdown-divider {
+    height: 1px;
+    margin: 6px 14px;
+    background: rgba(201,146,42,0.15);
+  }
+
+  #session-label {
+    position: fixed;
+    top: 58px;
+    left: 26px;
+    z-index: 30;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: rgba(201,146,42,0.28);
+    pointer-events: none;
+  }
+
+  #progress-box {
+    position: fixed;
+    bottom: 80px;
+    right: 24px;
+    z-index: 30;
+    text-align: right;
+    pointer-events: none;
+  }
+  #progress-box .prog-label {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: rgba(201,146,42,0.35);
+    display: block;
+    margin-bottom: 3px;
+  }
+  #progress-box .prog-nums {
+    font-size: 20px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: rgba(201,146,42,0.75);
+    text-shadow: 0 0 12px rgba(201,146,42,0.30);
+  }
+  #progress-box .prog-nums span {
+    font-size: 11px;
+    color: rgba(201,146,42,0.40);
+    font-weight: 400;
+  }
+
+  #scroll-speed-wrap {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #scroll-speed-wrap .spd-chip {
+    background: none;
+    border: 1px solid rgba(201,146,42,0.25);
+    color: rgba(201,146,42,0.50);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Georgia', serif;
+    outline: none;
+    white-space: nowrap;
+  }
+  #scroll-speed-wrap .spd-chip:hover {
+    border-color: rgba(201,146,42,0.60);
+    color: rgba(201,146,42,0.90);
+    text-shadow: 0 0 10px rgba(201,146,42,0.45);
+    background: rgba(201,146,42,0.05);
+  }
+  #scroll-speed-wrap .spd-chip.active {
+    border-color: rgba(255,220,100,0.80);
+    color: #ffe080;
+    text-shadow: 0 0 12px rgba(255,200,60,0.70);
+    background: rgba(201,146,42,0.10);
+    box-shadow: 0 0 16px rgba(201,146,42,0.18);
+  }
+
+  /* ── Completion overlay ── */
+  #done-overlay {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(0,0,0,0.80);
+    backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+  }
+  #done-overlay.show { display: flex; }
+  #done-box {
+    text-align: center;
+    padding: 48px 52px 40px;
+    border: 1px solid rgba(201,146,42,0.30);
+    border-radius: 18px;
+    background: rgba(8,4,0,0.94);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 0 80px rgba(201,146,42,0.12);
+    animation: popup-in 0.6s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  #done-box .d-icon { font-size:42px; display:block; margin-bottom:16px; }
+  #done-box .d-title { font-size:11px; letter-spacing:4px; text-transform:uppercase; color:rgba(201,146,42,0.50); margin-bottom:14px; display:block; }
+  #done-box .d-name { font-size:18px; color:rgba(255,220,100,0.70); display:block; margin-bottom:6px; letter-spacing:2px; }
+  #done-box .d-count { font-size:56px; font-weight:700; color:#ffe080; text-shadow:0 0 30px rgba(255,200,60,0.60), 0 0 60px rgba(201,146,42,0.30); display:block; font-variant-numeric:tabular-nums; margin-bottom:6px; }
+  #done-box .d-sub { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(201,146,42,0.40); margin-bottom:32px; display:block; }
+  #done-restart { background:none; border:1px solid rgba(201,146,42,0.45); color:rgba(255,210,80,0.80); font-family:'Georgia',serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; padding:11px 36px; border-radius:30px; cursor:pointer; transition:all 0.25s ease; outline:none; }
+  #done-restart:hover { border-color:rgba(255,220,100,0.80); color:#fff; box-shadow:0 0 24px rgba(201,146,42,0.22); background:rgba(201,146,42,0.07); }
+
+  /* ── Popup ── */
+  #popup-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.82);
+    backdrop-filter: blur(5px);
+    display: flex; align-items: center; justify-content: center;
+    animation: fade-in 0.5s ease forwards;
+  }
+  #popup-overlay.hiding { animation: fade-out 0.5s ease forwards; pointer-events:none; }
+  @keyframes fade-in  { from{opacity:0} to{opacity:1} }
+  @keyframes fade-out { from{opacity:1} to{opacity:0} }
+  @keyframes popup-in { 0%{opacity:0;transform:scale(0.92) translateY(14px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
+
+  #popup {
+    text-align: center;
+    padding: 40px 44px 34px;
+    border: 1px solid rgba(201,146,42,0.30);
+    border-radius: 18px;
+    background: rgba(8,4,0,0.94);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 60px rgba(201,146,42,0.10);
+    max-width: 400px;
+    width: 92vw;
+    animation: popup-in 0.6s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  #popup .p-icon { font-size:32px; display:block; margin-bottom:14px; }
+  #popup .p-title { font-size:11px; letter-spacing:3.5px; text-transform:uppercase; color:rgba(201,146,42,0.50); margin-bottom:20px; display:block; }
+
+  /* Name selector */
+  .field-label {
+    font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: rgba(201,146,42,0.40); display: block; margin-bottom: 8px; text-align: left;
+  }
+  #name-select {
+    width: 100%;
+    background: rgba(201,146,42,0.06);
+    border: 1px solid rgba(201,146,42,0.30);
+    border-radius: 10px;
+    color: #ffe080;
+    font-family: 'Times New Roman', 'Scheherazade New', serif;
+    font-size: 1rem;
+    padding: 10px 14px;
+    outline: none;
+    margin-bottom: 18px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    direction: rtl;
+    text-align: right;
+  }
+  #name-select:focus {
+    border-color: rgba(255,220,100,0.60);
+    box-shadow: 0 0 14px rgba(201,146,42,0.18);
+  }
+  #name-select option {
+    background: #0a0600;
+    color: #ffe080;
+    direction: rtl;
+    font-size: 1rem;
+  }
+
+  /* preview under select */
+  #name-preview {
+    font-family: 'Times New Roman', 'Scheherazade New', serif;
+    font-size: 1.4rem;
+    color: rgba(255,220,100,0.70);
+    text-shadow: 0 0 14px rgba(201,146,42,0.35);
+    margin-bottom: 20px;
+    display: block;
+    min-height: 2rem;
+    letter-spacing: 2px;
+  }
+
+  /* count input */
+  #count-input-wrap {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; margin-bottom: 26px;
+  }
+  #count-input-wrap label {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(201,146,42,0.45);
+  }
+  #count-input {
+    background: rgba(201,146,42,0.07);
+    border: 1px solid rgba(201,146,42,0.35);
+    border-radius: 8px;
+    color: #ffe080;
+    font-family: 'Georgia', serif;
+    font-size: 20px; font-weight: 700; text-align: center;
+    width: 90px; padding: 8px 10px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #count-input:focus { border-color: rgba(255,220,100,0.70); box-shadow: 0 0 16px rgba(201,146,42,0.20); }
+  #count-input::-webkit-outer-spin-button,
+  #count-input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  #count-input[type=number] { -moz-appearance:textfield; }
+
+  #popup-ok {
+    background: none; border: 1px solid rgba(201,146,42,0.45);
+    color: rgba(255,210,80,0.80); font-family: 'Georgia', serif;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    padding: 11px 36px; border-radius: 30px;
+    cursor: pointer; transition: all 0.25s ease; outline: none;
+  }
+  #popup-ok:hover { border-color:rgba(255,220,100,0.80); color:#fff; box-shadow:0 0 24px rgba(201,146,42,0.22); background:rgba(201,146,42,0.07); }
+
+  @media (max-width: 600px) {
+    .breadcrumb {
+      display: none;
+    }
+    #progress-box {
+      bottom: 72px;
+      right: 14px;
+    }
+    #progress-box .prog-nums {
+      font-size: 16px;
+    }
+    #progress-box .prog-label {
+      font-size: 8px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo">Eye Zikr</span>
+    <span class="breadcrumb">Tasbeeh</span>
+  </div>
+  <button class="nav-toggle" id="navToggle">☰</button>
+</div>
+<div class="dropdown" id="dropdown">
+  <a href="index.html">Eye Zikr</a>
+  <a href="tasbeeh.html" class="active">Names Tasbeeh</a>
+  <div class="dropdown-divider"></div>
+  <a href="https://mshariqq.github.io" target="_blank" rel="noopener">About</a>
+</div>
+
+<canvas id="stars-canvas"></canvas>
+
+<div id="scroll-viewport">
+  <div id="scroll-track"></div>
+</div>
+
+<div id="session-label"></div>
+
+<div id="progress-box">
+  <span class="prog-label">Progress</span>
+  <div class="prog-nums">
+    <span id="prog-current">0</span>
+    <span> / </span>
+    <span id="prog-total">—</span>
+  </div>
+</div>
+
+<div id="scroll-speed-wrap">
+  <button class="spd-chip active" data-secs="2">Slow</button>
+  <button class="spd-chip" data-secs="1">Normal</button>
+  <button class="spd-chip" data-secs="0.3">Fast</button>
+  <button class="spd-chip" data-secs="0.1">Very Fast</button>
+</div>
+
+<div id="done-overlay">
+  <div id="done-box">
+    <span class="d-icon">✨</span>
+    <span class="d-title">Tasbeeh Complete</span>
+    <span class="d-name" id="done-name"></span>
+    <span class="d-count" id="done-count">0</span>
+    <span class="d-sub">times — Alhamdulillah</span>
+    <button id="done-restart">Begin Again</button>
+  </div>
+</div>
+
+<div id="popup-overlay">
+  <div id="popup">
+    <span class="p-icon">📿</span>
+    <span class="p-title">Choose Your Zikr</span>
+
+    <label class="field-label">Select a Name of Allah</label>
+    <select id="name-select"></select>
+    <span id="name-preview"></span>
+
+    <div id="count-input-wrap">
+      <label>Count</label>
+      <input id="count-input" type="number" min="1" max="99999" value="33" />
+    </div>
+
+    <button id="popup-ok">Begin</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   99 NAMES — format: يَا [name] هُ
+   Arabic: يَا = Ya,  هُ = Hu
+══════════════════════════════════════ */
+const NAMES = [
+  { label: "يَا اللَّهُ هُ",          arabic: "اللَّه",        english: "Allah — The God" },
+  { label: "يَا رَحْمَنُ هُ",         arabic: "الرَّحْمَن",    english: "Ar-Rahman — The Most Merciful" },
+  { label: "يَا رَحِيمُ هُ",          arabic: "الرَّحِيم",     english: "Ar-Rahim — The Most Compassionate" },
+  { label: "يَا مَلِكُ هُ",           arabic: "الْمَلِك",      english: "Al-Malik — The King" },
+  { label: "يَا قُدُّوسُ هُ",         arabic: "الْقُدُّوس",    english: "Al-Quddus — The Most Sacred" },
+  { label: "يَا سَلَامُ هُ",          arabic: "السَّلَام",     english: "As-Salaam — The Source of Peace" },
+  { label: "يَا مُؤْمِنُ هُ",         arabic: "الْمُؤْمِن",    english: "Al-Mu'min — The Giver of Faith" },
+  { label: "يَا مُهَيْمِنُ هُ",       arabic: "الْمُهَيْمِن",  english: "Al-Muhaymin — The Guardian" },
+  { label: "يَا عَزِيزُ هُ",          arabic: "الْعَزِيز",     english: "Al-Aziz — The Mighty" },
+  { label: "يَا جَبَّارُ هُ",         arabic: "الْجَبَّار",    english: "Al-Jabbar — The Compeller" },
+  { label: "يَا مُتَكَبِّرُ هُ",      arabic: "الْمُتَكَبِّر", english: "Al-Mutakabbir — The Supreme" },
+  { label: "يَا خَالِقُ هُ",          arabic: "الْخَالِق",     english: "Al-Khaliq — The Creator" },
+  { label: "يَا بَارِئُ هُ",          arabic: "الْبَارِئ",     english: "Al-Bari — The Evolver" },
+  { label: "يَا مُصَوِّرُ هُ",        arabic: "الْمُصَوِّر",   english: "Al-Musawwir — The Fashioner" },
+  { label: "يَا غَفَّارُ هُ",         arabic: "الْغَفَّار",    english: "Al-Ghaffar — The Forgiving" },
+  { label: "يَا قَهَّارُ هُ",         arabic: "الْقَهَّار",    english: "Al-Qahhar — The Subduer" },
+  { label: "يَا وَهَّابُ هُ",         arabic: "الْوَهَّاب",    english: "Al-Wahhab — The Bestower" },
+  { label: "يَا رَزَّاقُ هُ",         arabic: "الرَّزَّاق",    english: "Ar-Razzaq — The Provider" },
+  { label: "يَا فَتَّاحُ هُ",         arabic: "الْفَتَّاح",    english: "Al-Fattah — The Opener" },
+  { label: "يَا عَلِيمُ هُ",          arabic: "الْعَلِيم",     english: "Al-Alim — The All-Knowing" },
+  { label: "يَا قَابِضُ هُ",          arabic: "الْقَابِض",     english: "Al-Qabid — The Constrictor" },
+  { label: "يَا بَاسِطُ هُ",          arabic: "الْبَاسِط",     english: "Al-Basit — The Expander" },
+  { label: "يَا خَافِضُ هُ",          arabic: "الْخَافِض",     english: "Al-Khafid — The Reducer" },
+  { label: "يَا رَافِعُ هُ",          arabic: "الرَّافِع",     english: "Ar-Rafi — The Elevating" },
+  { label: "يَا مُعِزُّ هُ",          arabic: "الْمُعِزّ",     english: "Al-Mu'izz — The Honourer" },
+  { label: "يَا مُذِلُّ هُ",          arabic: "الْمُذِلّ",     english: "Al-Mudhill — The Humiliator" },
+  { label: "يَا سَمِيعُ هُ",          arabic: "السَّمِيع",     english: "As-Sami — The All-Hearing" },
+  { label: "يَا بَصِيرُ هُ",          arabic: "الْبَصِير",     english: "Al-Basir — The All-Seeing" },
+  { label: "يَا حَكَمُ هُ",           arabic: "الْحَكَم",      english: "Al-Hakam — The Judge" },
+  { label: "يَا عَدْلُ هُ",           arabic: "الْعَدْل",      english: "Al-Adl — The Just" },
+  { label: "يَا لَطِيفُ هُ",          arabic: "اللَّطِيف",     english: "Al-Latif — The Subtle" },
+  { label: "يَا خَبِيرُ هُ",          arabic: "الْخَبِير",     english: "Al-Khabir — The All-Aware" },
+  { label: "يَا حَلِيمُ هُ",          arabic: "الْحَلِيم",     english: "Al-Halim — The Forbearing" },
+  { label: "يَا عَظِيمُ هُ",          arabic: "الْعَظِيم",     english: "Al-Azim — The Magnificent" },
+  { label: "يَا غَفُورُ هُ",          arabic: "الْغَفُور",     english: "Al-Ghafur — The All-Forgiving" },
+  { label: "يَا شَكُورُ هُ",          arabic: "الشَّكُور",     english: "Ash-Shakur — The Appreciative" },
+  { label: "يَا عَلِيُّ هُ",          arabic: "الْعَلِيّ",     english: "Al-Ali — The Most High" },
+  { label: "يَا كَبِيرُ هُ",          arabic: "الْكَبِير",     english: "Al-Kabir — The Most Great" },
+  { label: "يَا حَفِيظُ هُ",          arabic: "الْحَفِيظ",     english: "Al-Hafiz — The Preserver" },
+  { label: "يَا مُقِيتُ هُ",          arabic: "الْمُقِيت",     english: "Al-Muqit — The Sustainer" },
+  { label: "يَا حَسِيبُ هُ",          arabic: "الْحَسِيب",     english: "Al-Hasib — The Reckoner" },
+  { label: "يَا جَلِيلُ هُ",          arabic: "الْجَلِيل",     english: "Al-Jalil — The Majestic" },
+  { label: "يَا كَرِيمُ هُ",          arabic: "الْكَرِيم",     english: "Al-Karim — The Generous" },
+  { label: "يَا رَقِيبُ هُ",          arabic: "الرَّقِيب",     english: "Ar-Raqib — The Watchful" },
+  { label: "يَا مُجِيبُ هُ",          arabic: "الْمُجِيب",     english: "Al-Mujib — The Responsive" },
+  { label: "يَا وَاسِعُ هُ",          arabic: "الْوَاسِع",     english: "Al-Wasi — The All-Encompassing" },
+  { label: "يَا حَكِيمُ هُ",          arabic: "الْحَكِيم",     english: "Al-Hakim — The Wise" },
+  { label: "يَا وَدُودُ هُ",          arabic: "الْوَدُود",     english: "Al-Wadud — The Loving" },
+  { label: "يَا مَجِيدُ هُ",          arabic: "الْمَجِيد",     english: "Al-Majid — The Glorious" },
+  { label: "يَا بَاعِثُ هُ",          arabic: "الْبَاعِث",     english: "Al-Ba'ith — The Resurrector" },
+  { label: "يَا شَهِيدُ هُ",          arabic: "الشَّهِيد",     english: "Ash-Shahid — The Witness" },
+  { label: "يَا حَقُّ هُ",            arabic: "الْحَقّ",       english: "Al-Haqq — The Truth" },
+  { label: "يَا وَكِيلُ هُ",          arabic: "الْوَكِيل",     english: "Al-Wakil — The Trustee" },
+  { label: "يَا قَوِيُّ هُ",          arabic: "الْقَوِيّ",     english: "Al-Qawi — The Strong" },
+  { label: "يَا مَتِينُ هُ",          arabic: "الْمَتِين",     english: "Al-Matin — The Firm" },
+  { label: "يَا وَلِيُّ هُ",          arabic: "الْوَلِيّ",     english: "Al-Wali — The Protecting Friend" },
+  { label: "يَا حَمِيدُ هُ",          arabic: "الْحَمِيد",     english: "Al-Hamid — The Praiseworthy" },
+  { label: "يَا مُحْصِيُ هُ",         arabic: "الْمُحْصِي",    english: "Al-Muhsi — The Counter" },
+  { label: "يَا مُبْدِئُ هُ",         arabic: "الْمُبْدِئ",    english: "Al-Mubdi — The Originator" },
+  { label: "يَا مُعِيدُ هُ",          arabic: "الْمُعِيد",     english: "Al-Mu'id — The Restorer" },
+  { label: "يَا مُحْيِي هُ",          arabic: "الْمُحْيِي",    english: "Al-Muhyi — The Giver of Life" },
+  { label: "يَا مُمِيتُ هُ",          arabic: "الْمُمِيت",     english: "Al-Mumit — The Taker of Life" },
+  { label: "يَا حَيُّ هُ",            arabic: "الْحَيّ",       english: "Al-Hayy — The Ever-Living" },
+  { label: "يَا قَيُّومُ هُ",         arabic: "الْقَيُّوم",    english: "Al-Qayyum — The Self-Sustaining" },
+  { label: "يَا وَاجِدُ هُ",          arabic: "الْوَاجِد",     english: "Al-Wajid — The Finder" },
+  { label: "يَا مَاجِدُ هُ",          arabic: "الْمَاجِد",     english: "Al-Majid — The Noble" },
+  { label: "يَا أَحَدُ هُ",           arabic: "الْأَحَد",      english: "Al-Ahad — The One" },
+  { label: "يَا صَمَدُ هُ",           arabic: "الصَّمَد",      english: "As-Samad — The Eternal" },
+  { label: "يَا قَادِرُ هُ",          arabic: "الْقَادِر",     english: "Al-Qadir — The All-Powerful" },
+  { label: "يَا مُقْتَدِرُ هُ",       arabic: "الْمُقْتَدِر",  english: "Al-Muqtadir — The Determiner" },
+  { label: "يَا مُقَدِّمُ هُ",        arabic: "الْمُقَدِّم",   english: "Al-Muqaddim — The Expediter" },
+  { label: "يَا مُؤَخِّرُ هُ",        arabic: "الْمُؤَخِّر",   english: "Al-Mu'akhkhir — The Delayer" },
+  { label: "يَا أَوَّلُ هُ",          arabic: "الْأَوَّل",     english: "Al-Awwal — The First" },
+  { label: "يَا آخِرُ هُ",            arabic: "الْآخِر",       english: "Al-Akhir — The Last" },
+  { label: "يَا ظَاهِرُ هُ",          arabic: "الظَّاهِر",     english: "Az-Zahir — The Manifest" },
+  { label: "يَا بَاطِنُ هُ",          arabic: "الْبَاطِن",     english: "Al-Batin — The Hidden" },
+  { label: "يَا وَالِي هُ",           arabic: "الْوَالِي",     english: "Al-Wali — The Governor" },
+  { label: "يَا مُتَعَالِي هُ",       arabic: "الْمُتَعَالِي", english: "Al-Muta'ali — The Self-Exalted" },
+  { label: "يَا بَرُّ هُ",            arabic: "الْبَرّ",       english: "Al-Barr — The Most Kind" },
+  { label: "يَا تَوَّابُ هُ",         arabic: "التَّوَّاب",    english: "At-Tawwab — The Ever-Relenting" },
+  { label: "يَا مُنْتَقِمُ هُ",       arabic: "الْمُنْتَقِم",  english: "Al-Muntaqim — The Avenger" },
+  { label: "يَا عَفُوُّ هُ",          arabic: "الْعَفُوّ",     english: "Al-Afuww — The Pardoner" },
+  { label: "يَا رَؤُوفُ هُ",          arabic: "الرَّؤُوف",     english: "Ar-Ra'uf — The Compassionate" },
+  { label: "يَا مُقْسِطُ هُ",         arabic: "الْمُقْسِط",    english: "Al-Muqsit — The Equitable" },
+  { label: "يَا جَامِعُ هُ",          arabic: "الْجَامِع",     english: "Al-Jami — The Gatherer" },
+  { label: "يَا غَنِيُّ هُ",          arabic: "الْغَنِيّ",     english: "Al-Ghani — The Self-Sufficient" },
+  { label: "يَا مُغْنِي هُ",          arabic: "الْمُغْنِي",    english: "Al-Mughni — The Enricher" },
+  { label: "يَا مَانِعُ هُ",          arabic: "الْمَانِع",     english: "Al-Mani — The Preventer" },
+  { label: "يَا ضَارُّ هُ",           arabic: "الضَّارّ",      english: "Ad-Darr — The Distressor" },
+  { label: "يَا نَافِعُ هُ",          arabic: "النَّافِع",     english: "An-Nafi — The Benefiter" },
+  { label: "يَا نُورُ هُ",            arabic: "النُّور",       english: "An-Nur — The Light" },
+  { label: "يَا هَادِي هُ",           arabic: "الْهَادِي",     english: "Al-Hadi — The Guide" },
+  { label: "يَا بَدِيعُ هُ",          arabic: "الْبَدِيع",     english: "Al-Badi — The Incomparable" },
+  { label: "يَا بَاقِي هُ",           arabic: "الْبَاقِي",     english: "Al-Baqi — The Everlasting" },
+  { label: "يَا وَارِثُ هُ",          arabic: "الْوَارِث",     english: "Al-Warith — The Inheritor" },
+  { label: "يَا رَشِيدُ هُ",          arabic: "الرَّشِيد",     english: "Ar-Rashid — The Guide to Right Path" },
+  { label: "يَا صَبُورُ هُ",          arabic: "الصَّبُور",     english: "As-Sabur — The Patient" },
+];
+
+/* ══════════════════════════════════════
+   BUILD SELECT
+══════════════════════════════════════ */
+const sel     = document.getElementById('name-select');
+const preview = document.getElementById('name-preview');
+
+NAMES.forEach((n, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `${n.label}  —  ${n.english}`;
+  sel.appendChild(opt);
+});
+
+function updatePreview() {
+  const n = NAMES[parseInt(sel.value)];
+  preview.textContent = n ? n.label : '';
+}
+sel.addEventListener('change', updatePreview);
+updatePreview();
+
+/* ══════════════════════════════════════
+   WARP STARS
+══════════════════════════════════════ */
+const canvas = document.getElementById('stars-canvas');
+const ctx    = canvas.getContext('2d');
+let W, H, cx, cy, stars = [];
+const STAR_COUNT = 520, MAX_DEPTH = 1000;
+let starSpeed = 3.5;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  cx = W/2; cy = H/2; buildStars();
+}
+function buildStars() {
+  stars = [];
+  for (let i=0;i<STAR_COUNT;i++) {
+    const s={x:(Math.random()-.5)*W,y:(Math.random()-.5)*H,z:Math.random()*MAX_DEPTH,pz:0};
+    s.pz=s.z; stars.push(s);
+  }
+}
+function drawStars() {
+  ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(0,0,W,H);
+  for (const s of stars) {
+    s.pz=s.z; s.z-=starSpeed;
+    if(s.z<=0){s.x=(Math.random()-.5)*W;s.y=(Math.random()-.5)*H;s.z=MAX_DEPTH;s.pz=MAX_DEPTH;}
+    const sx=(s.x/s.z)*W+cx,sy=(s.y/s.z)*H+cy,px=(s.x/s.pz)*W+cx,py=(s.y/s.pz)*H+cy;
+    const t=1-s.z/MAX_DEPTH,alpha=Math.min(1,t*1.4),radius=Math.max(0.3,t*2.2);
+    ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(sx,sy);
+    ctx.strokeStyle=`rgba(255,245,220,${alpha.toFixed(3)})`;
+    ctx.lineWidth=radius;ctx.stroke();
+  }
+}
+function starLoop(){drawStars();requestAnimationFrame(starLoop);}
+window.addEventListener('resize',resize);
+resize();
+ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+starLoop();
+
+/* ══════════════════════════════════════
+   SCROLL ENGINE
+══════════════════════════════════════ */
+const track       = document.getElementById('scroll-track');
+const elCurrent   = document.getElementById('prog-current');
+const elTotal        = document.getElementById('prog-total');
+const doneOverlay = document.getElementById('done-overlay');
+const doneCount   = document.getElementById('done-count');
+const doneName    = document.getElementById('done-name');
+
+let totalCount = 33, chosenName = NAMES[0];
+let lines = [], scrollY = 0, lineHeight = 0, running = false, rafId = null;
+
+/* ══════════════════════════════════════
+   SPEED
+══════════════════════════════════════ */
+let scrollPxPerFrame = 0;
+
+function setSpeed(secs) {
+  const lh = lineHeight || 34;
+  scrollPxPerFrame = lh / (secs * 60);
+  document.querySelectorAll('.spd-chip').forEach(c => {
+    c.classList.toggle('active', parseFloat(c.dataset.secs) === secs);
+  });
+}
+
+document.querySelectorAll('.spd-chip').forEach(c => {
+  c.addEventListener('click', () => setSpeed(parseFloat(c.dataset.secs)));
+});
+setSpeed(2);
+
+function buildTrack(n, nameObj) {
+  track.innerHTML = '';
+  lines = [];
+  const spacer = document.createElement('div');
+  spacer.style.height = '52vh';
+  track.appendChild(spacer);
+  for (let i=0;i<n;i++) {
+    const el = document.createElement('div');
+    el.className = 'allah-line';
+    el.textContent = nameObj.label;
+    track.appendChild(el);
+    lines.push(el);
+  }
+  const spacer2 = document.createElement('div');
+  spacer2.style.height = '52vh';
+  track.appendChild(spacer2);
+  requestAnimationFrame(() => {
+    lineHeight = lines[0] ? lines[0].offsetHeight + 18 : 34;
+  });
+}
+
+function getCenterY() { return window.innerHeight / 2; }
+
+function updateLines() {
+  const viewCenter = getCenterY();
+  const spacer = window.innerHeight * 0.52;
+  let nearestIdx = -1, nearestDist = Infinity;
+  lines.forEach((el,i) => {
+    const lineMid = spacer + i*lineHeight + lineHeight/2 - scrollY;
+    const dist = Math.abs(lineMid - viewCenter);
+    if(dist < nearestDist){nearestDist=dist;nearestIdx=i;}
+    if(lineMid < viewCenter - lineHeight*0.5) el.className='allah-line done';
+    else if(i===nearestIdx) el.className='allah-line current';
+    else el.className='allah-line';
+  });
+  elCurrent.textContent = Math.min(Math.max(nearestIdx+1,0), totalCount);
+}
+
+function scrollLoop() {
+  if(!running) return;
+  scrollY += scrollPxPerFrame;
+  track.style.transform = `translateY(-${scrollY}px)`;
+  updateLines();
+  const spacer = window.innerHeight*0.52;
+  const lastMid = spacer + (lines.length-1)*lineHeight + lineHeight/2 - scrollY;
+  if(lastMid < getCenterY() - lineHeight){ finish(); return; }
+  rafId = requestAnimationFrame(scrollLoop);
+}
+
+function finish() {
+  running = false;
+  doneCount.textContent = totalCount;
+  doneName.textContent  = chosenName.label;
+  doneOverlay.classList.add('show');
+}
+
+function startTasbeeh(n, nameObj) {
+  totalCount = n; chosenName = nameObj;
+  scrollY = 0;
+  elTotal.textContent = n; elCurrent.textContent = 0;
+  doneOverlay.classList.remove('show');
+  buildTrack(n, nameObj);
+  setTimeout(()=>{ running=true; rafId=requestAnimationFrame(scrollLoop); }, 400);
+}
+
+/* ══════════════════════════════════════
+   POPUP
+══════════════════════════════════════ */
+function bindPopup(overlay) {
+  overlay.querySelector('#popup-ok').addEventListener('click', () => {
+    const val = parseInt(overlay.querySelector('#count-input').value) || 33;
+    const nameObj = NAMES[parseInt(overlay.querySelector('#name-select').value)] || NAMES[0];
+    overlay.classList.add('hiding');
+    setTimeout(()=>overlay.remove(), 500);
+    startTasbeeh(Math.max(1,Math.min(val,99999)), nameObj);
+  });
+  overlay.querySelector('#count-input').addEventListener('keydown', e=>{
+    if(e.key==='Enter') overlay.querySelector('#popup-ok').click();
+  });
+  const s = overlay.querySelector('#name-select');
+  const p = overlay.querySelector('#name-preview');
+  if(s && p) s.addEventListener('change', ()=>{ p.textContent = NAMES[parseInt(s.value)]?.label || ''; });
+}
+bindPopup(document.getElementById('popup-overlay'));
+
+document.getElementById('done-restart').addEventListener('click', () => {
+  doneOverlay.classList.remove('show');
+  const ov = document.createElement('div');
+  ov.id = 'popup-overlay';
+  ov.innerHTML = `
+    <div id="popup">
+      <span class="p-icon">📿</span>
+      <span class="p-title">Choose Your Zikr</span>
+      <label class="field-label">Select a Name of Allah</label>
+      <select id="name-select">${NAMES.map((n,i)=>`<option value="${i}">${n.label}  —  ${n.english}</option>`).join('')}</select>
+      <span id="name-preview">${NAMES[0].label}</span>
+      <div id="count-input-wrap">
+        <label>Count</label>
+        <input id="count-input" type="number" min="1" max="99999" value="${totalCount}" />
+      </div>
+      <button id="popup-ok">Begin</button>
+    </div>`;
+  document.body.appendChild(ov);
+  bindPopup(ov);
+});
+
+/* ══════════════════════════════════════
+   NAV TOGGLE
+══════════════════════════════════════ */
+document.getElementById('navToggle').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('dropdown').classList.toggle('open');
+});
+document.addEventListener('click', () => document.getElementById('dropdown').classList.remove('open'));
+document.getElementById('dropdown').addEventListener('click', (e) => e.stopPropagation());
+</script>
+</body>
+</html>

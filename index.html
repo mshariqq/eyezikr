@@ -173,7 +173,7 @@
 
   #session-label {
     position: fixed;
-    top: 22px;
+    top: 58px;
     left: 26px;
     z-index: 20;
     font-size: 10px;
@@ -181,24 +181,6 @@
     text-transform: uppercase;
     color: rgba(201,146,42,0.28);
     pointer-events: none;
-  }
-
-  /* ── Creator credit ── */
-  #credit {
-    position: fixed;
-    bottom: 24px;
-    left: 24px;
-    z-index: 20;
-    font-size: 10px;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    text-decoration: none;
-    color: rgba(201,146,42,0.28);
-    transition: color 0.3s ease, text-shadow 0.3s ease;
-  }
-  #credit:hover {
-    color: rgba(255,220,100,0.70);
-    text-shadow: 0 0 12px rgba(201,146,42,0.40);
   }
 
   /* ── Popup overlay ── */
@@ -292,6 +274,108 @@
     background: rgba(201,146,42,0.07);
   }
 
+  /* ── Header / Nav ── */
+  .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 26px;
+    background: rgba(8,4,0,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(201,146,42,0.12);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo {
+    font-family: 'Times New Roman', 'Scheherazade New', serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #c9922a;
+    text-shadow: 0 0 10px rgba(201,146,42,0.25);
+    user-select: none;
+  }
+  .breadcrumb {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: rgba(201,146,42,0.35);
+    user-select: none;
+  }
+  .breadcrumb::before {
+    content: '/';
+    margin-right: 10px;
+    color: rgba(201,146,42,0.20);
+  }
+  .nav-toggle {
+    background: none;
+    border: 1px solid rgba(201,146,42,0.30);
+    color: #c9922a;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    outline: none;
+  }
+  .nav-toggle:hover {
+    border-color: rgba(255,220,100,0.60);
+    color: #ffe080;
+  }
+  .dropdown {
+    position: fixed;
+    top: 54px;
+    right: 26px;
+    z-index: 199;
+    min-width: 170px;
+    background: rgba(8,4,0,0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(201,146,42,0.20);
+    border-radius: 10px;
+    padding: 8px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  }
+  .dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .dropdown a {
+    display: block;
+    padding: 10px 20px;
+    font-family: 'Georgia', serif;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: rgba(201,146,42,0.65);
+    transition: background 0.2s, color 0.2s;
+  }
+  .dropdown a:hover {
+    background: rgba(201,146,42,0.08);
+    color: #ffe080;
+  }
+  .dropdown a.active {
+    color: #ffe080;
+    text-shadow: 0 0 10px rgba(255,200,60,0.40);
+  }
+  .dropdown-divider {
+    height: 1px;
+    margin: 6px 14px;
+    background: rgba(201,146,42,0.15);
+  }
+
   /* ── Speed controls ── */
   #speed-bar {
     position: fixed;
@@ -343,9 +427,123 @@
     min-width: 52px;
     text-align: center;
   }
+
+  /* ── Gear button (mobile speed toggle) ── */
+  .gear-btn {
+    display: none;
+    position: fixed;
+    bottom: 14px;
+    left: 14px;
+    z-index: 35;
+    background: rgba(201,146,42,0.15);
+    border: 1px solid rgba(201,146,42,0.35);
+    color: #c9922a;
+    font-size: 18px;
+    line-height: 1;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    outline: none;
+  }
+  .gear-btn:hover {
+    background: rgba(201,146,42,0.25);
+    border-color: rgba(255,220,100,0.60);
+    color: #ffe080;
+  }
+
+  /* ── Speed popup (mobile) ── */
+  #speed-popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: rgba(0,0,0,0.80);
+    backdrop-filter: blur(6px);
+    align-items: center;
+    justify-content: center;
+  }
+  #speed-popup.open {
+    display: flex;
+  }
+  #speed-popup-inner {
+    text-align: center;
+    padding: 32px 36px 28px;
+    border: 1px solid rgba(201,146,42,0.25);
+    border-radius: 16px;
+    background: rgba(8,4,0,0.94);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 60px rgba(201,146,42,0.08);
+    min-width: 200px;
+  }
+  #speed-popup-inner .sp-title {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(201,146,42,0.45);
+    margin-bottom: 18px;
+  }
+  #speed-popup-inner .spd-btn {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+    text-align: center;
+    padding: 10px 20px;
+    font-size: 11px;
+  }
+  #speed-popup-inner .spd-btn:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ── Mobile responsive ── */
+  @media (max-width: 600px) {
+    .breadcrumb {
+      display: none;
+    }
+    #stage {
+      width: 90vw;
+      height: 90vw;
+      max-width: 400px;
+      max-height: 400px;
+    }
+    #allah {
+      font-size: 18vw;
+    }
+    #speed-bar {
+      display: none;
+    }
+    .gear-btn {
+      display: block;
+    }
+    #counter {
+      bottom: 62px;
+      right: 14px;
+    }
+    #counter .number {
+      font-size: 20px;
+    }
+    #counter .total-number {
+      font-size: 12px;
+    }
+  }
 </style>
 </head>
 <body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo">Eye Zikr</span>
+    <span class="breadcrumb">Meditation</span>
+  </div>
+  <button class="nav-toggle" id="navToggle">☰</button>
+</div>
+<div class="dropdown" id="dropdown">
+  <a href="index.html" class="active">Eye Zikr</a>
+  <a href="tasbeeh.html">Names Tasbeeh</a>
+  <div class="dropdown-divider"></div>
+  <a href="https://mshariqq.github.io" target="_blank" rel="noopener">About</a>
+</div>
 
 <canvas id="stars-canvas"></canvas>
 <div id="flash"></div>
@@ -355,9 +553,7 @@
   <div id="allah">ٱللَّٰه</div>
 </div>
 
-<div id="session-label">Session</div>
-
-<a id="credit" href="https://mshariqq.github.io" target="_blank" rel="noopener">Created by Muhammed Shariqq</a>
+<div id="session-label"></div>
 
 <div id="popup-overlay">
   <div id="popup">
@@ -386,6 +582,19 @@
   <span id="pace-label">pace</span>
   <button class="spd-btn" data-interval="900">Rapid</button>
   <button class="spd-btn" data-interval="400">Storm</button>
+</div>
+
+<button class="gear-btn" id="gearBtn">⚙</button>
+
+<div id="speed-popup">
+  <div id="speed-popup-inner">
+    <span class="sp-title">Speed</span>
+    <button class="spd-btn" data-interval="6000">Calm</button>
+    <button class="spd-btn active" data-interval="3400">Normal</button>
+    <button class="spd-btn" data-interval="1800">Fast</button>
+    <button class="spd-btn" data-interval="900">Rapid</button>
+    <button class="spd-btn" data-interval="400">Storm</button>
+  </div>
 </div>
 
 <script>
@@ -539,6 +748,35 @@ window.addEventListener('resize', resize);
 resize();
 ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
 loop();
+
+/* ══════════════════════════════════════
+   NAV TOGGLE
+══════════════════════════════════════ */
+const navToggle = document.getElementById('navToggle');
+const dropdown  = document.getElementById('dropdown');
+navToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dropdown.classList.toggle('open');
+});
+document.addEventListener('click', () => dropdown.classList.remove('open'));
+dropdown.addEventListener('click', (e) => e.stopPropagation());
+
+/* ══════════════════════════════════════
+   GEAR / SPEED POPUP (mobile)
+══════════════════════════════════════ */
+const gearBtn   = document.getElementById('gearBtn');
+const speedPopup = document.getElementById('speed-popup');
+
+gearBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  speedPopup.classList.toggle('open');
+});
+speedPopup.addEventListener('click', (e) => {
+  if (e.target === speedPopup) speedPopup.classList.remove('open');
+});
+speedPopup.querySelectorAll('.spd-btn').forEach(btn => {
+  btn.addEventListener('click', () => speedPopup.classList.remove('open'));
+});
 </script>
 </body>
 </html>
